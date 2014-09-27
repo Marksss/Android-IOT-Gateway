@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <string name="app_name">Lab517</string>
+    <string name="SerialPortSettingsTitle">Serial Port Assistant</string>
+    <string name="backButtonText">Back</string>
+    <string name="sendButtonLabel">Send</string>
+    <string name="CommDataViewTitle">Lab517</string>
+    <string name="fromDataLabel">Data received:</string>
+    <string name="toDataLabel">Text to Send:</string>
+    <string name="socketConnect">socket is not connected!</string>
+    <string name="serverIP">IP:  </string>
+    <string name="serverPORT">PORT:  </string>
+    <string name="defaultIP1">10</string>
+    <string name="defaultIP2">8</string>
+    <string name="defaultIP3">207</string>
+    <string name="defaultIP4">196</string>
+    <string name="defaultPORT">8888</string>
+    <string name="button">连接</string>
+    <string name="dot">.</string>
+</resources>
