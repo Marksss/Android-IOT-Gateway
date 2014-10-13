@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import com.friendlyarm.AndroidSDK.DataRevThread;
 import com.friendlyarm.demo.MainActivity;
 
 import android.os.Message;

@@ -10,9 +10,9 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
-import com.friendlyarm.AndroidSDK.DataRevThread;
 import com.friendlyarm.demo.R;
 import com.friendlyarm.thread.ConnStatusThread;
+import com.friendlyarm.thread.DataRevThread;
 import com.friendlyarm.thread.DataSendThread;
 import com.friendlyarm.thread.DataStoreThread;
 

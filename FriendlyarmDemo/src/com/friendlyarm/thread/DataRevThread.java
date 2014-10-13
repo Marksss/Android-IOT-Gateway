@@ -1,11 +1,10 @@
-package com.friendlyarm.AndroidSDK;
+package com.friendlyarm.thread;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import com.friendlyarm.AndroidSDK.HardwareControler;
 import com.friendlyarm.demo.MainActivity;
-import com.friendlyarm.thread.DataSendThread;
-import com.friendlyarm.thread.DataStoreThread;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
