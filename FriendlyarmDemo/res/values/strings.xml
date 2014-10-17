@@ -10,11 +10,11 @@
     <string name="socketConnect">socket is not connected!</string>
     <string name="serverIP">IP:  </string>
     <string name="serverPORT">PORT:  </string>
-    <string name="defaultIP1">10</string>
-    <string name="defaultIP2">8</string>
-    <string name="defaultIP3">207</string>
-    <string name="defaultIP4">196</string>
+    <string name="defaultIP1">192</string>
+    <string name="defaultIP2">168</string>
+    <string name="defaultIP3">123</string>
+    <string name="defaultIP4">5</string>
     <string name="defaultPORT">8888</string>
-    <string name="button">连接</string>
+    <string name="button">断开重连</string>
     <string name="dot">.</string>
 </resources>

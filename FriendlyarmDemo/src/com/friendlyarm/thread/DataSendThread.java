@@ -10,9 +10,7 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
 import com.friendlyarm.demo.MainActivity;
-
 import android.os.Message;
 import android.util.Log;
 
@@ -25,16 +23,19 @@ public class DataSendThread extends Thread {
 	private static final int SOCKET_CONNECT = 1, SOCKET_DISCONNECT = 2;
 	private String host = null;
 	private int port = 0;
-	private boolean editEnable, socketConnected;
+	private boolean editEnable, socketConnected, isSerialPortReady;
 	// editEnable：检查是否正在更改ip和port的标识(等同于editIP.isEnable())
 	// socketConnected：socket连接状态，连接(true)，断开(false)
 	private Queue<String> sendQueue = null;// 暂时储存用于发送的数据
 	private Socket server = null;
 
-	public DataSendThread() {
+	public DataSendThread(String host, int port) {
 		sendQueue = new ConcurrentLinkedQueue<String>();
-		editEnable = true;
+		editEnable = false;
 		socketConnected = true;
+		isSerialPortReady = false;
+		this.host = host;
+		this.port = port;
 	}
 
 	@Override
@@ -45,7 +46,7 @@ public class DataSendThread extends Thread {
 	
 		while (true) {
 			try {
-				if (editEnable || !socketConnected) {
+				if (editEnable || !socketConnected || !isSerialPortReady) {
 					/* 如果button未按下，正在更改ip和port，则循环运行sleep(500) */
 					Thread.sleep(500);
 					continue;
@@ -91,7 +92,7 @@ public class DataSendThread extends Thread {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				Log.i(TAG, "Read time out...Can't connect the server");
+				Log.i(TAG, host + ":" + port + "---Read time out");
 	
 				try {
 					// 如果暂时无法连接服务器，则每隔1s重连一次
@@ -126,7 +127,7 @@ public class DataSendThread extends Thread {
 		int dataLength = (tempData.charAt(7) - 48) * 10 + tempData.charAt(8)
 				- 48;
 		
-		pout.print("POST NodeID=" + tempData.substring(1, 5) + ",NodeType="
+		pout.print("POST NodeID=" + tempData.substring(1, 6) + ",NodeType="
 				+ tempData.charAt(6) + ",Data="
 				+ tempData.substring(9, 9 + dataLength) + ",UploadDate="
 				+ tempData.substring(9 + dataLength, tempData.length())
@@ -144,6 +145,13 @@ public class DataSendThread extends Thread {
 		}else{
 			return false;
 		}
+	}
+
+	/**
+	 * @param isSerialPortReady
+	 */
+	public void setSerialPortReady(boolean isSerialPortReady) {
+		this.isSerialPortReady = isSerialPortReady;
 	}
 	
 	/**

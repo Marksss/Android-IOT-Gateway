@@ -29,7 +29,7 @@ public class DataRevThread extends Thread {
 		this.dataSendThread = dst1;
 		this.dataStoreThread = dst2;
 		df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 日期格式
-		editEnable = true;
+		editEnable = false;
 		socketConnected = true;
 	}
 
@@ -52,6 +52,7 @@ public class DataRevThread extends Thread {
 				devfd = HardwareControler.openSerialPort(devName, speed,
 						dataBits, stopBits);
 				Log.i(TAG, "SerialPort opened");
+				dataSendThread.setSerialPortReady(true);
 
 				while (devfd != -1) {
 					Thread.sleep(200);

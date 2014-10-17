@@ -6,8 +6,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import com.friendlyarm.demo.R;
@@ -50,35 +48,23 @@ public class MainActivity extends Activity implements OnClickListener {
 		editPORT = (EditText) findViewById(R.id.editport);
 		button = (Button) findViewById(R.id.button1);
 		button.setOnClickListener(this);
-//		checkbox = (CheckBox) findViewById(R.id.checkbox1);
-//		checkbox.setChecked(true);
-//		checkbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//			@Override
-//			public void onCheckedChanged(CompoundButton buttonView,
-//					boolean isChecked) {
-//				// TODO Auto-generated method stub
-//				 if (isChecked) {
-//				 dataRevThread.setSocketConnected(true);
-//				 dataSendThread.setSocketConnected(true);
-//				 dataStoreThread.setSocketConnected(true);
-//				 } else {
-//				 dataRevThread.setSocketConnected(false);
-//				 dataSendThread.setSocketConnected(false);
-//				 dataStoreThread.setSocketConnected(false);
-//				 }
-//			}
-//		});
 
-		dataSendThread = new DataSendThread();
-		dataSendThread.start();// 开启数据发送线程
+		String host = this.getString(R.string.defaultIP1) + "."
+				+ this.getString(R.string.defaultIP2) + "."
+				+ this.getString(R.string.defaultIP3) + "."
+				+ this.getString(R.string.defaultIP4);
+		int port = Integer.parseInt(this.getString(R.string.defaultPORT));
+		
+		dataSendThread = new DataSendThread(host, port);
 		dataStoreThread = new DataStoreThread(getApplicationContext(),
 				dataSendThread);
-		dataStoreThread.start();// 开启本地数据存储线程
 		dataRevThread = new DataRevThread(dataSendThread, dataStoreThread);
-		dataRevThread.start();// 开启数据接收线程
 		connStatusThread = new ConnStatusThread(dataSendThread, dataRevThread,
 				dataStoreThread);
-		connStatusThread.start();
+		dataRevThread.start();// 开启数据接收线程
+		dataSendThread.start();// 开启数据发送线程
+		dataStoreThread.start();// 开启本地数据存储线程
+		connStatusThread.start();// 开启网络监控线程
 	}
 
 	/*
@@ -112,7 +98,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				editIP3.setEnabled(false);
 				editIP4.setEnabled(false);
 				editPORT.setEnabled(false);
-				button.setText("断开");
+				button.setText("断开重连");
 
 				dataRevThread.setEditEnable(false);
 				dataSendThread.setEditEnable(false);
