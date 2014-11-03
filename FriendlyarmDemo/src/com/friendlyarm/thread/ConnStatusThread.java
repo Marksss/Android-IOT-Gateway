@@ -3,9 +3,7 @@ package com.friendlyarm.thread;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
 import com.friendlyarm.demo.MainActivity;
-
 import android.os.Message;
 import android.util.Log;
 
@@ -36,6 +34,8 @@ public class ConnStatusThread extends Thread {
 		// TODO Auto-generated method stub
 		try {
 			while (true) {
+				//ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);   
+				
 				if (dataSendThread.getServer()) {
 					InetAddress inet = InetAddress.getByName(host);
 
@@ -44,12 +44,6 @@ public class ConnStatusThread extends Thread {
 					} else {
 						setSocketConn(false);
 					}
-
-//					if (dataSendThread.getQueueSize() > 1000) {
-//						checkOverflow(true);
-//					} else {
-//						checkOverflow(false);
-//					}
 				}
 
 				Thread.sleep(3000);
@@ -87,14 +81,6 @@ public class ConnStatusThread extends Thread {
 
 			MainActivity.handler.sendMessage(message);
 			socketConnected = sc;
-		}
-	}
-
-	private void checkOverflow(boolean f) {
-		if (queueOverflow != f) {
-			dataRevThread.setSocketConnected(f);
-			dataStoreThread.setSocketConnected(f);
-			queueOverflow = f;
 		}
 	}
 
