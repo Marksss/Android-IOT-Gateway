@@ -22,7 +22,7 @@ public class DataStoreThread extends Thread {
 	public DataStoreThread(Context cxt, DataSendThread dst) {
 		this.dataSendThread = dst;
 		this.context = cxt;
-		socketConnected = true;
+		socketConnected = false;
 		storeQueue = new ConcurrentLinkedQueue<String>();
 	}
 

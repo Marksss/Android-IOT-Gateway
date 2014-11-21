@@ -60,7 +60,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				dataSendThread);
 		dataRevThread = new DataRevThread(dataSendThread, dataStoreThread);
 		connStatusThread = new ConnStatusThread(dataSendThread, dataRevThread,
-				dataStoreThread);
+				dataStoreThread, host);
 		dataRevThread.start();// 开启数据接收线程
 		dataSendThread.start();// 开启数据发送线程
 		dataStoreThread.start();// 开启本地数据存储线程

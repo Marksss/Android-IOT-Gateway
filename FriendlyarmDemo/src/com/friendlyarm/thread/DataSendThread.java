@@ -32,7 +32,7 @@ public class DataSendThread extends Thread {
 	public DataSendThread(String host, int port) {
 		sendQueue = new ConcurrentLinkedQueue<String>();
 		editEnable = false;
-		socketConnected = true;
+		socketConnected = false;
 		isSerialPortReady = false;
 		this.host = host;
 		this.port = port;

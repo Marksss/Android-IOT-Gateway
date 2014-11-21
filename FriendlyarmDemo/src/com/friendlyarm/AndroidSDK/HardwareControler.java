@@ -11,6 +11,9 @@ public class HardwareControler
 	static public native void close(int fd);
     static public native int ioctlWithIntValue(int fd, int cmd, int value);
     
+    /* LED */
+	static public native int setLedState( int ledID, int ledState );
+    
 	/* Serial Port */
 	static public native int openSerialPort( String devName, long baud, int dataBits, int stopBits );
     static public native int openSerialPortEx( String devName

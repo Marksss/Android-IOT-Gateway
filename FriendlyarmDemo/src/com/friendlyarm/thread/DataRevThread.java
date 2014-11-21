@@ -30,7 +30,7 @@ public class DataRevThread extends Thread {
 		this.dataStoreThread = dst2;
 		df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 日期格式
 		editEnable = false;
-		socketConnected = true;
+		socketConnected = false;
 	}
 
 	private final String devName = "/dev/s3c2410_serial3";
