@@ -1,8 +1,6 @@
 package com.friendlyarm.thread;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
-
 import com.friendlyarm.AndroidSDK.HardwareControler;
 import com.friendlyarm.demo.MainActivity;
 import android.os.Message;
@@ -14,7 +12,7 @@ import android.util.Log;
  */
 public class ConnStatusThread extends Thread {
 	private static final String TAG = "ConnStatusThread";
-	private static final int SOCKET_CONNECT = 1, SOCKET_RECONNECT = 4;
+	private static final int SOCKET_CONNECT = 1, SOCKET_DISCONNECT = 2;
 	private String host = null;
 	private DataSendThread dataSendThread = null;
 	private DataRevThread dataRevThread = null;
@@ -34,11 +32,12 @@ public class ConnStatusThread extends Thread {
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
+		Process process;
 		try {
 			while (true) {
-				Process p = Runtime.getRuntime().exec(
+				process = Runtime.getRuntime().exec(
 						"ping -c 1 -w 100 " + host);
-				int status = p.waitFor();
+				int status = process.waitFor();
 
 				if (status == 0) {
 					setSocketConn(true);
@@ -51,9 +50,6 @@ public class ConnStatusThread extends Thread {
 			}
 		} catch (InterruptedException e1) {
 			Log.i(TAG, "ConnStatusThread closed!!!");
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -77,7 +73,7 @@ public class ConnStatusThread extends Thread {
 				HardwareControler.setLedState(0,1);
 				Log.i(TAG, host + ":ping success");
 			} else {
-				message.what = SOCKET_RECONNECT;
+				message.what = SOCKET_DISCONNECT;
 				HardwareControler.setLedState(0,0);
 			}
 

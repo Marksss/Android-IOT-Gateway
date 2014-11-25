@@ -8,6 +8,8 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.friendlyarm.AndroidSDK.HardwareControler;
 import com.friendlyarm.demo.R;
 import com.friendlyarm.thread.ConnStatusThread;
 import com.friendlyarm.thread.DataRevThread;
@@ -54,7 +56,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				+ this.getString(R.string.defaultIP3) + "."
 				+ this.getString(R.string.defaultIP4);
 		int port = Integer.parseInt(this.getString(R.string.defaultPORT));
-		
+
 		dataSendThread = new DataSendThread(host, port);
 		dataStoreThread = new DataStoreThread(getApplicationContext(),
 				dataSendThread);
@@ -65,6 +67,8 @@ public class MainActivity extends Activity implements OnClickListener {
 		dataSendThread.start();// 开启数据发送线程
 		dataStoreThread.start();// 开启本地数据存储线程
 		connStatusThread.start();// 开启网络监控线程
+
+		HardwareControler.setLedState(2, 1);
 	}
 
 	/*
@@ -121,7 +125,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	private static final int SOCKET_CONNECT = 1, SOCKET_DISCONNECT = 2,
-			REFLESH_TEXT = 3, SOCKET_RECONNECT = 4;
+			REFLESH_TEXT = 3;
 	private static final int MAXLINES = 12; // UI界面显示的行数
 
 	public static Handler handler = new Handler() {
@@ -137,17 +141,11 @@ public class MainActivity extends Activity implements OnClickListener {
 				socketConnect.setTextColor(android.graphics.Color.RED);
 				break;
 			case REFLESH_TEXT:
-
 				if (dataView.getLineCount() >= MAXLINES) {
 					dataView.setText(msg.getData().getString("str"));
 				} else {
 					dataView.append(msg.getData().getString("str"));
 				}
-
-				break;
-			case SOCKET_RECONNECT:
-				socketConnect.setText("ready to reconnect!");
-				socketConnect.setTextColor(android.graphics.Color.YELLOW);
 				break;
 			}
 		}
@@ -155,6 +153,9 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	@Override
 	public void onDestroy() {
+		HardwareControler.setLedState(0, 0);
+		HardwareControler.setLedState(2, 0);
+
 		// 同时中断4个线程，然后自行终止
 		dataSendThread.interrupt();
 		dataRevThread.interrupt();

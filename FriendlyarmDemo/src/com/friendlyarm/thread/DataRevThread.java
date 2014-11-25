@@ -52,7 +52,6 @@ public class DataRevThread extends Thread {
 				devfd = HardwareControler.openSerialPort(devName, speed,
 						dataBits, stopBits);
 				Log.i(TAG, "SerialPort opened");
-				dataSendThread.setSerialPortReady(true);
 
 				while (devfd != -1) {
 					Thread.sleep(200);

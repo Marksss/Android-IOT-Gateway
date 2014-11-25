@@ -27,7 +27,7 @@ public class DataStoreThread extends Thread {
 	}
 
 	// selectCount：每次检索*条数据；insertCount：每次插入*条数据
-	private final int selectCount = 100, insertCount = 100;
+	private final int selectCount = 100, insertCount = 20;
 	// delayTime：发送延迟*ms
 	private final long delayTime = 100;
 
