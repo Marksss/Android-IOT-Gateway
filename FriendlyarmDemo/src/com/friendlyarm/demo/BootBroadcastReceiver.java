@@ -12,7 +12,7 @@ public class BootBroadcastReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		// TODO Auto-generated method stub
-		setMAC(new String("00:00:FF:FF:00:03"));
+		setMAC(new String("00:00:FF:FF:00:01"));
 		
 		Intent intentBoot = new Intent(context, MainActivity.class);
         intentBoot.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

@@ -5,6 +5,8 @@ import java.util.Date;
 
 import com.friendlyarm.AndroidSDK.HardwareControler;
 import com.friendlyarm.demo.MainActivity;
+import com.friendlyarm.demo.Variable;
+
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
@@ -16,10 +18,6 @@ import android.util.Log;
 public class DataRevThread extends Thread {
 
 	private static final String TAG = "DataRevThread";
-	private static final int REFLESH_TEXT = 3;
-	private boolean editEnable, socketConnected;
-	// editEnable：检查是否正在更改ip和port的标识(等同于editIP.isEnable())
-	// socketConnected：socket连接状态，连接(true)，断开(false)
 	private SimpleDateFormat df = null;
 	private DataSendThread dataSendThread = null;
 	private DataStoreThread dataStoreThread = null;
@@ -29,8 +27,6 @@ public class DataRevThread extends Thread {
 		this.dataSendThread = dst1;
 		this.dataStoreThread = dst2;
 		df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 日期格式
-		editEnable = false;
-		socketConnected = false;
 	}
 
 	private final String devName = "/dev/s3c2410_serial3";
@@ -66,10 +62,10 @@ public class DataRevThread extends Thread {
 							Bundle bundle = new Bundle();
 							bundle.putString("str", str);
 							message.setData(bundle);
-							message.what = REFLESH_TEXT;
+							message.what = Variable.REFLESH_TEXT;
 							MainActivity.handler.sendMessage(message);
 
-							if (!editEnable) {
+							if (!Variable.editEnable) {
 								// 若button已按下，则解析数据并传递到相应的线程中
 								str.replace("\r\n", "");
 								frameData.append(str);
@@ -115,7 +111,7 @@ public class DataRevThread extends Thread {
 						break;
 					} else {
 						// 帧完整，则发送到DataSendThread或DataStoreThread
-						if (socketConnected) {
+						if (Variable.socketConnected) {
 							dataSendThread.offerQueue(tempData.substring(0,
 									9 + dataLength) + df.format(new Date()));
 						} else {
@@ -133,23 +129,5 @@ public class DataRevThread extends Thread {
 		}
 
 		return tempData;
-	}
-
-	/**
-	 * 从MainActivity被动获取button按钮的状态,检查button有未按下,是否需要断开重连
-	 * 
-	 * @param ee
-	 */
-	public void setEditEnable(boolean ee) {
-		this.editEnable = ee;
-	}
-
-	/**
-	 * 从MainActivity被动获取soeketConnected的状态,用于检测socketConnected是否连接
-	 * 
-	 * @param sc
-	 */
-	public void setSocketConnected(boolean sc) {
-		this.socketConnected = sc;
 	}
 }

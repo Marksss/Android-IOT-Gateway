@@ -3,6 +3,8 @@ package com.friendlyarm.thread;
 import java.io.IOException;
 import com.friendlyarm.AndroidSDK.HardwareControler;
 import com.friendlyarm.demo.MainActivity;
+import com.friendlyarm.demo.Variable;
+
 import android.os.Message;
 import android.util.Log;
 
@@ -12,22 +14,6 @@ import android.util.Log;
  */
 public class ConnStatusThread extends Thread {
 	private static final String TAG = "ConnStatusThread";
-	private static final int SOCKET_CONNECT = 1, SOCKET_DISCONNECT = 2;
-	private String host = null;
-	private DataSendThread dataSendThread = null;
-	private DataRevThread dataRevThread = null;
-	private DataStoreThread dataStoreThread = null;
-	private boolean socketConnected;
-
-	public ConnStatusThread(DataSendThread dataSendThread,
-			DataRevThread dataRevThread, DataStoreThread dataStoreThread,
-			String host) {
-		this.dataSendThread = dataSendThread;
-		this.dataRevThread = dataRevThread;
-		this.dataStoreThread = dataStoreThread;
-		socketConnected = false;
-		this.host = host;
-	}
 
 	@Override
 	public void run() {
@@ -36,16 +22,17 @@ public class ConnStatusThread extends Thread {
 		try {
 			while (true) {
 				process = Runtime.getRuntime().exec(
-						"ping -c 1 -w 100 " + host);
+						"ping -c 1 -w 100 " + Variable.host);
 				int status = process.waitFor();
 
 				if (status == 0) {
 					setSocketConn(true);
 				} else {
 					setSocketConn(false);
-					Log.i(TAG, host + ":ping failed");
+					Log.i(TAG, Variable.host + ":ping failed");
 				}
-
+				process.destroy();
+				
 				Thread.sleep(3000);
 			}
 		} catch (InterruptedException e1) {
@@ -62,32 +49,20 @@ public class ConnStatusThread extends Thread {
 	 * @param sc
 	 */
 	private void setSocketConn(boolean sc) {
-		if (socketConnected != sc) {
-			dataRevThread.setSocketConnected(sc);
-			dataSendThread.setSocketConnected(sc);
-			dataStoreThread.setSocketConnected(sc);
+		if (Variable.socketConnected != sc) {
 			Message message = new Message();
 
 			if (sc) {
-				message.what = SOCKET_CONNECT;
+				message.what = Variable.PING_CONNECT;
 				HardwareControler.setLedState(0,1);
-				Log.i(TAG, host + ":ping success");
+				Log.i(TAG, Variable.host + ":ping success");
 			} else {
-				message.what = SOCKET_DISCONNECT;
+				message.what = Variable.SOCKET_DISCONNECT;
 				HardwareControler.setLedState(0,0);
 			}
 
 			MainActivity.handler.sendMessage(message);
-			socketConnected = sc;
+			Variable.socketConnected = sc;
 		}
-	}
-
-	/**
-	 * 从MainActivity被动获取host
-	 * 
-	 * @param Host
-	 */
-	public void setHOST(String Host) {
-		this.host = Host;
 	}
 }

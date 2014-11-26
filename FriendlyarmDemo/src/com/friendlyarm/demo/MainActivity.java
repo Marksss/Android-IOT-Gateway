@@ -35,6 +35,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private DataRevThread dataRevThread = null;
 	private DataStoreThread dataStoreThread = null;
 	private ConnStatusThread connStatusThread = null;
+	private static final int MAXLINES = 12; // UI界面显示的行数
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -51,18 +52,17 @@ public class MainActivity extends Activity implements OnClickListener {
 		button = (Button) findViewById(R.id.button1);
 		button.setOnClickListener(this);
 
-		String host = this.getString(R.string.defaultIP1) + "."
+		Variable.host = this.getString(R.string.defaultIP1) + "."
 				+ this.getString(R.string.defaultIP2) + "."
 				+ this.getString(R.string.defaultIP3) + "."
 				+ this.getString(R.string.defaultIP4);
-		int port = Integer.parseInt(this.getString(R.string.defaultPORT));
+		Variable.port = Integer.parseInt(this.getString(R.string.defaultPORT));
 
-		dataSendThread = new DataSendThread(host, port);
+		dataSendThread = new DataSendThread();
 		dataStoreThread = new DataStoreThread(getApplicationContext(),
 				dataSendThread);
 		dataRevThread = new DataRevThread(dataSendThread, dataStoreThread);
-		connStatusThread = new ConnStatusThread(dataSendThread, dataRevThread,
-				dataStoreThread, host);
+		connStatusThread = new ConnStatusThread();
 		dataRevThread.start();// 开启数据接收线程
 		dataSendThread.start();// 开启数据发送线程
 		dataStoreThread.start();// 开启本地数据存储线程
@@ -82,7 +82,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		if (v.getId() == R.id.button1) {
 			// TODO Auto-generated method stub
 			if (editIP1.isEnabled()) {
-				String host = editIP1.getText().toString() + "."
+				Variable.host = editIP1.getText().toString() + "."
 						+ editIP2.getText().toString() + "."
 						+ editIP3.getText().toString() + "."
 						+ editIP4.getText().toString();
@@ -91,11 +91,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				if ("".equals(strPort)) {
 					strPort = "0";
 				}
-				int port = Integer.parseInt(strPort);
-
-				dataSendThread.setHOST(host);
-				dataSendThread.setPORT(port);
-				connStatusThread.setHOST(host);
+				Variable.port = Integer.parseInt(strPort);
 
 				editIP1.setEnabled(false);
 				editIP2.setEnabled(false);
@@ -104,8 +100,7 @@ public class MainActivity extends Activity implements OnClickListener {
 				editPORT.setEnabled(false);
 				button.setText("断开重连");
 
-				dataRevThread.setEditEnable(false);
-				dataSendThread.setEditEnable(false);
+				Variable.editEnable = false;
 
 			} else {
 				editIP1.setEnabled(true);
@@ -118,29 +113,28 @@ public class MainActivity extends Activity implements OnClickListener {
 				socketConnect.setTextColor(android.graphics.Color.RED);
 
 				// 重启数据发送线程，重新连接服务器
-				dataRevThread.setEditEnable(true);
-				dataSendThread.setEditEnable(true);
+				Variable.editEnable = true;
 			}
 		}
 	}
-
-	private static final int SOCKET_CONNECT = 1, SOCKET_DISCONNECT = 2,
-			REFLESH_TEXT = 3;
-	private static final int MAXLINES = 12; // UI界面显示的行数
 
 	public static Handler handler = new Handler() {
 		public void handleMessage(Message msg) {
 			super.handleMessage(msg);
 			switch (msg.what) {
-			case SOCKET_CONNECT:
+			case Variable.SOCKET_CONNECT:
 				socketConnect.setText("socket is connected!");
 				socketConnect.setTextColor(android.graphics.Color.GREEN);
 				break;
-			case SOCKET_DISCONNECT:
+			case Variable.SOCKET_DISCONNECT:
 				socketConnect.setText("socket is not connected!");
 				socketConnect.setTextColor(android.graphics.Color.RED);
 				break;
-			case REFLESH_TEXT:
+			case Variable.PING_CONNECT:
+				socketConnect.setText("ip connect,socket disconnect");
+				socketConnect.setTextColor(android.graphics.Color.YELLOW);
+				break;
+			case Variable.REFLESH_TEXT:
 				if (dataView.getLineCount() >= MAXLINES) {
 					dataView.setText(msg.getData().getString("str"));
 				} else {

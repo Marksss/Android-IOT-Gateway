@@ -3,6 +3,8 @@ package com.friendlyarm.thread;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import com.friendlyarm.demo.Variable;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -14,7 +16,6 @@ import android.util.Log;
  */
 public class DataStoreThread extends Thread {
 	private static final String TAG = "DataStoreThread";
-	private boolean socketConnected;// socket连接状态，连接(true)，断开(false)
 	private Queue<String> storeQueue = null;// 暂时储存插入到数据库中之前的数据
 	private DataSendThread dataSendThread = null;
 	private Context context = null;
@@ -22,12 +23,11 @@ public class DataStoreThread extends Thread {
 	public DataStoreThread(Context cxt, DataSendThread dst) {
 		this.dataSendThread = dst;
 		this.context = cxt;
-		socketConnected = false;
 		storeQueue = new ConcurrentLinkedQueue<String>();
 	}
 
 	// selectCount：每次检索*条数据；insertCount：每次插入*条数据
-	private final int selectCount = 100, insertCount = 20;
+	private final int selectCount = 100, insertCount = 100;
 	// delayTime：发送延迟*ms
 	private final long delayTime = 100;
 
@@ -45,14 +45,14 @@ public class DataStoreThread extends Thread {
 
 		try {
 			while (true) {
-				if (socketConnected) {
+				Thread.sleep(1000);
+				
+				if (Variable.socketConnected) {
 					/*
 					 * socket已连接 则将数据库和内存中的数据发送到DataSendThread中
 					 */
 
 					if (storeQueue.isEmpty()) {
-						// 如果storeQueue中没有数据，则驻留于此
-						Thread.sleep(1000);
 						continue;
 					}
 
@@ -60,7 +60,7 @@ public class DataStoreThread extends Thread {
 					while (true) {
 						Cursor cursor = db.rawQuery(getSelectLine(selectCount),
 								null);
-
+						
 						if (!cursor.moveToFirst()) {
 							// 如果游标中没有数据则跳出循环
 							cursor.close();
@@ -71,7 +71,7 @@ public class DataStoreThread extends Thread {
 							// 将从数据库中取出的数据发送到DataSendThread中
 							dataSendThread.offerQueue(cursor.getString(0));
 							Thread.sleep(delayTime);
-						} while (cursor.moveToNext() && socketConnected);
+						} while (cursor.moveToNext() && Variable.socketConnected);
 
 						// 删除在数据库中的*条数据
 						db.execSQL(getDeleteLine(cursor.getPosition() + 1));
@@ -80,7 +80,7 @@ public class DataStoreThread extends Thread {
 					}
 
 					// 数据库清空后再发送内存(storeQueue)中的数据
-					while (!storeQueue.isEmpty() && socketConnected) {
+					while (!storeQueue.isEmpty() && Variable.socketConnected) {
 						dataSendThread.offerQueue(storeQueue.poll());
 						Thread.sleep(delayTime);
 					}
@@ -104,8 +104,6 @@ public class DataStoreThread extends Thread {
 						db.endTransaction();
 						Log.i(TAG, "Insert " + insertCount);
 					}
-
-					Thread.sleep(200);
 				}
 			}
 		} catch (InterruptedException e) {
@@ -152,14 +150,5 @@ public class DataStoreThread extends Thread {
 	 */
 	public void offerQueue(String str) {
 		this.storeQueue.offer(str);
-	}
-
-	/**
-	 * 从MainActivity被动获取soeketConnected的状态,用于检测socketConnected是否连接
-	 * 
-	 * @param sc
-	 */
-	public void setSocketConnected(boolean sc) {
-		this.socketConnected = sc;
 	}
 }
