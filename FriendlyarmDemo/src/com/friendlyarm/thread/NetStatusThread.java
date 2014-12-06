@@ -12,8 +12,8 @@ import android.util.Log;
  * @author SXL 检测服务器是否实时连接
  * 
  */
-public class ConnStatusThread extends Thread {
-	private static final String TAG = "ConnStatusThread";
+public class NetStatusThread extends Thread {
+	private static final String TAG = "NetStatusThread";
 
 	@Override
 	public void run() {
@@ -26,9 +26,9 @@ public class ConnStatusThread extends Thread {
 				int status = process.waitFor();
 
 				if (status == 0) {
-					setSocketConn(true);
+					setNetStatus(true);
 				} else {
-					setSocketConn(false);
+					setNetStatus(false);
 					Log.i(TAG, Variable.host + ":ping failed");
 				}
 				process.destroy();
@@ -44,25 +44,24 @@ public class ConnStatusThread extends Thread {
 	}
 
 	/**
-	 * 服务器断开后或重连后设置各线程socketConnected
+	 * 服务器断开后或重连后设置各线程pingConnected
 	 * 
 	 * @param sc
 	 */
-	private void setSocketConn(boolean sc) {
-		if (Variable.socketConnected != sc) {
-			Message message = new Message();
-
+	private void setNetStatus(boolean sc) {
+		if (Variable.isSocketConnected != sc) {
+			Variable.isSocketConnected = sc;
+			
 			if (sc) {
+				Message message = new Message();
 				message.what = Variable.PING_CONNECT;
+				MainActivity.handler.sendMessage(message);
+				
 				HardwareControler.setLedState(0,1);
 				Log.i(TAG, Variable.host + ":ping success");
 			} else {
-				message.what = Variable.SOCKET_DISCONNECT;
 				HardwareControler.setLedState(0,0);
 			}
-
-			MainActivity.handler.sendMessage(message);
-			Variable.socketConnected = sc;
 		}
 	}
 }

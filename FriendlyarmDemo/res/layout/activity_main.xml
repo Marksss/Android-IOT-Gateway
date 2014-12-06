@@ -7,7 +7,8 @@
         android:id="@+id/textview1"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="@string/socketConnect"/>
+        android:text="@string/socketConnect"
+        android:textColor="#ffff0000"/>
     
     <LinearLayout 
         android:orientation="horizontal" 

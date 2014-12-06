@@ -1,5 +1,8 @@
 package com.friendlyarm.demo;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,7 +14,7 @@ import android.widget.TextView;
 
 import com.friendlyarm.AndroidSDK.HardwareControler;
 import com.friendlyarm.demo.R;
-import com.friendlyarm.thread.ConnStatusThread;
+import com.friendlyarm.thread.NetStatusThread;
 import com.friendlyarm.thread.DataRevThread;
 import com.friendlyarm.thread.DataSendThread;
 import com.friendlyarm.thread.DataStoreThread;
@@ -34,14 +37,21 @@ public class MainActivity extends Activity implements OnClickListener {
 	private DataSendThread dataSendThread = null;
 	private DataRevThread dataRevThread = null;
 	private DataStoreThread dataStoreThread = null;
-	private ConnStatusThread connStatusThread = null;
+	private NetStatusThread connStatusThread = null;
 	private static final int MAXLINES = 12; // UI界面显示的行数
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		setMAC(new String("00:00:FF:FF:00:01"));
 
+		iniWidgets();
+		iniThreads();
+		HardwareControler.setLedState(2, 1);
+	}
+
+	private void iniWidgets() {
 		socketConnect = (TextView) findViewById(R.id.textview1);
 		dataView = (TextView) findViewById(R.id.textview2);
 		editIP1 = (EditText) findViewById(R.id.editip1);
@@ -51,7 +61,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		editPORT = (EditText) findViewById(R.id.editport);
 		button = (Button) findViewById(R.id.button1);
 		button.setOnClickListener(this);
+	}
 
+	private void iniThreads() {
 		Variable.host = this.getString(R.string.defaultIP1) + "."
 				+ this.getString(R.string.defaultIP2) + "."
 				+ this.getString(R.string.defaultIP3) + "."
@@ -62,21 +74,47 @@ public class MainActivity extends Activity implements OnClickListener {
 		dataStoreThread = new DataStoreThread(getApplicationContext(),
 				dataSendThread);
 		dataRevThread = new DataRevThread(dataSendThread, dataStoreThread);
-		connStatusThread = new ConnStatusThread();
+		connStatusThread = new NetStatusThread();
 		dataRevThread.start();// 开启数据接收线程
 		dataSendThread.start();// 开启数据发送线程
 		dataStoreThread.start();// 开启本地数据存储线程
 		connStatusThread.start();// 开启网络监控线程
-
-		HardwareControler.setLedState(2, 1);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see android.view.View.OnClickListener#onClick(android.view.View)
-	 * 监听button（连接或断开按钮），重新连接，更改IP和端口
+	/**
+	 * @param mac 设置mac地址
 	 */
+	public static void setMAC(String mac) {
+		Process process = null;
+		DataOutputStream os = null;
+		try {
+			process = Runtime.getRuntime().exec("su");
+			os = new DataOutputStream(process.getOutputStream());
+			os.writeBytes("/system/busybox/sbin/ifconfig eth0 down\n");
+			os.writeBytes("/system/busybox/sbin/ifconfig eth0 hw ether " + mac + "\n");
+			os.writeBytes("/system/busybox/sbin/ifconfig eth0 up\n");
+			os.writeBytes("exit\n");
+			os.flush();
+			process.waitFor();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				if(os != null){
+					os.close();
+				}
+				process.destroy();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
 	@Override
 	public void onClick(View v) {
 		if (v.getId() == R.id.button1) {
@@ -109,9 +147,10 @@ public class MainActivity extends Activity implements OnClickListener {
 				editIP4.setEnabled(true);
 				editPORT.setEnabled(true);
 				button.setText("连接");
-				socketConnect.setText("socket is not connected!");
-				socketConnect.setTextColor(android.graphics.Color.RED);
-
+				if (Variable.isSocketConnected) {
+					socketConnect.setText("ip connect,   socket disconnect");
+					socketConnect.setTextColor(android.graphics.Color.YELLOW);
+				}
 				// 重启数据发送线程，重新连接服务器
 				Variable.editEnable = true;
 			}
@@ -130,8 +169,12 @@ public class MainActivity extends Activity implements OnClickListener {
 				socketConnect.setText("socket is not connected!");
 				socketConnect.setTextColor(android.graphics.Color.RED);
 				break;
+			case Variable.SOCKET_CONNECTING:
+				socketConnect.setText("connecting...!");
+				socketConnect.setTextColor(android.graphics.Color.BLUE);
+				break;
 			case Variable.PING_CONNECT:
-				socketConnect.setText("ip connect,socket disconnect");
+				socketConnect.setText("ip connect,   socket disconnect");
 				socketConnect.setTextColor(android.graphics.Color.YELLOW);
 				break;
 			case Variable.REFLESH_TEXT:

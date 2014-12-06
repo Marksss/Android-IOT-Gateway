@@ -47,7 +47,7 @@ public class DataStoreThread extends Thread {
 			while (true) {
 				Thread.sleep(1000);
 				
-				if (Variable.socketConnected) {
+				if (Variable.isSocketConnected) {
 					/*
 					 * socket已连接 则将数据库和内存中的数据发送到DataSendThread中
 					 */
@@ -71,7 +71,7 @@ public class DataStoreThread extends Thread {
 							// 将从数据库中取出的数据发送到DataSendThread中
 							dataSendThread.offerQueue(cursor.getString(0));
 							Thread.sleep(delayTime);
-						} while (cursor.moveToNext() && Variable.socketConnected);
+						} while (cursor.moveToNext() && Variable.isSocketConnected);
 
 						// 删除在数据库中的*条数据
 						db.execSQL(getDeleteLine(cursor.getPosition() + 1));
@@ -80,7 +80,7 @@ public class DataStoreThread extends Thread {
 					}
 
 					// 数据库清空后再发送内存(storeQueue)中的数据
-					while (!storeQueue.isEmpty() && Variable.socketConnected) {
+					while (!storeQueue.isEmpty() && Variable.isSocketConnected) {
 						dataSendThread.offerQueue(storeQueue.poll());
 						Thread.sleep(delayTime);
 					}

@@ -67,7 +67,6 @@ public class DataRevThread extends Thread {
 
 							if (!Variable.editEnable) {
 								// 若button已按下，则解析数据并传递到相应的线程中
-								str.replace("\r\n", "");
 								frameData.append(str);
 								frameData = analyzeData(frameData);
 							}
@@ -111,7 +110,7 @@ public class DataRevThread extends Thread {
 						break;
 					} else {
 						// 帧完整，则发送到DataSendThread或DataStoreThread
-						if (Variable.socketConnected) {
+						if (Variable.isSocketConnected) {
 							dataSendThread.offerQueue(tempData.substring(0,
 									9 + dataLength) + df.format(new Date()));
 						} else {

@@ -42,12 +42,15 @@ public class DataSendThread extends Thread {
 
 		while (true) {
 			try {
-				if (Variable.editEnable || !Variable.socketConnected) {
+				if (Variable.editEnable || !Variable.isSocketConnected) {
 					// 如果button未按下，正在更改ip和port，则循环运行sleep(500)
 					Thread.sleep(500);
 					continue;
 				}
 
+				message = Message.obtain();
+				message.what = Variable.SOCKET_CONNECTING;
+				MainActivity.handler.sendMessage(message);
 				Log.i(TAG, "Ready to connect");
 
 				// 连接服务器
@@ -60,41 +63,41 @@ public class DataSendThread extends Thread {
 				MainActivity.handler.sendMessage(message);
 
 				// 更改系统时间
+				input = client.getInputStream();
 				if (!timeChecked) {
-					input = client.getInputStream();
 					if (setSystemTime(input)) {
 						Log.i(TAG, "System time changed");
 						timeChecked = true;
 					}
 				}
-
 				print = new PrintWriter(new BufferedWriter(
 						new OutputStreamWriter(client.getOutputStream())), true);
 
 				Log.i(TAG, "Server connected");
+				int i = 0;
 
 				while (true) {
-					if (Variable.editEnable || !Variable.socketConnected) {
+					if (Variable.editEnable || !Variable.isSocketConnected) {
 						// “button未按下”和“socket突然断开” 二者中满足其中一个就重新循环
-						message = Message.obtain();
-						message.what = Variable.SOCKET_DISCONNECT;
-						MainActivity.handler.sendMessage(message);
-
 						client.close();
 						print.close();
-						if (input != null) {
-							input.close();
-						}
+						input.close();
 
 						Log.i(TAG, "Restart Socket");
 						break;
 					}
 
+					// 发送数据
 					while (!sendQueue.isEmpty()) {
-						// 取出删除头元素，并发送
 						sendData(sendQueue.poll(), print);
 					}
 
+					// 接收关闭socket标识
+					if((i++) >= 20){
+						Variable.isSocketConnected = !isServerSocetClosed(input);
+						i = 0;
+					}
+					
 					Thread.sleep(200);
 				}
 			} catch (UnknownHostException e) {
@@ -107,7 +110,7 @@ public class DataSendThread extends Thread {
 					Log.i(TAG, Variable.host + ":" + Variable.port + "---Read time out");
 					try {
 						// 如果暂时无法连接服务器，则每隔2s重连一次
-						Thread.sleep(2000);
+						Thread.sleep(3000);
 					} catch (InterruptedException e2) {
 						Log.i(TAG, "Socket closed!!!");
 						break;
@@ -134,9 +137,33 @@ public class DataSendThread extends Thread {
 		}
 	}
 
+	/**
+	 * @param input
+	 * @return 判断服务器端socket是否连接
+	 * @throws IOException
+	 */
+	private boolean isServerSocetClosed(InputStream input) throws IOException {
+		if(input.available() > 0){
+			byte[] buf = new byte[1024];
+			int length = input.read(buf);
+			if(length > 5){
+				String strClose = new String(buf, 0, 5);
+				if (strClose.equals("close")) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * @param input
+	 * @return 设置系统时间
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
 	private boolean setSystemTime(InputStream input) throws IOException,
 			InterruptedException {
-		byte[] buf = new byte[1024];
 		int i = 0;
 		while (input.available() < 1 && !Variable.editEnable && (i++) < 6) {
 			//检测到数据，重新更改ip和port，或者超过3s，则跳出循环，进入发送过程
@@ -144,18 +171,24 @@ public class DataSendThread extends Thread {
 		}
 
 		if (input.available() > 0) {
+			byte[] buf = new byte[1024];
 			if (input.read(buf) >= 15) {
 				String time = new String(buf, 0, 15);
-				Process process = Runtime.getRuntime().exec("su");
-				DataOutputStream os = new DataOutputStream(
-						process.getOutputStream());
-				os.writeBytes("setprop persist.sys.timezone GMT\n");
-				os.writeBytes("/system/bin/date -s " + time + "\n");
-				os.writeBytes("clock -w\n");
-				os.writeBytes("exit\n");
-				os.flush();
-
-				return true;
+				if (time.substring(0, 2).equals("20")) {
+					Process process = Runtime.getRuntime().exec("su");
+					DataOutputStream os = new DataOutputStream(
+							process.getOutputStream());
+					os.writeBytes("setprop persist.sys.timezone GMT\n");
+					os.writeBytes("/system/bin/date -s " + time + "\n");
+					os.writeBytes("clock -w\n");
+					os.writeBytes("exit\n");
+					os.flush();
+					process.waitFor();
+					
+					os.close();
+					process.destroy();
+					return true;
+				}
 			}
 		}
 
@@ -197,12 +230,5 @@ public class DataSendThread extends Thread {
 	 */
 	public void offerQueue(String str) {
 		sendQueue.offer(str);
-	}
-
-	/**
-	 * @return sendQueue的大小
-	 */
-	public int getQueueSize() {
-		return sendQueue.size();
 	}
 }
