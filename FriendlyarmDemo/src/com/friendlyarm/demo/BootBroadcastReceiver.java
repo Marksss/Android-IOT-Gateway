@@ -9,6 +9,7 @@ public class BootBroadcastReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		// TODO Auto-generated method stub
+		Variable.sysBoot = true;
 		Intent intentBoot = new Intent(context, MainActivity.class);
         intentBoot.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intentBoot);

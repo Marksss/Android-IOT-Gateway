@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <resources>
-    <string name="app_name">Lab517</string>
-    <string name="SerialPortSettingsTitle">Serial Port Assistant</string>
+    <string name="app_name">WSN-gateway</string>
+    <string name="SerialPortSettingsTitle">Gateway Assistant</string>
     <string name="backButtonText">Back</string>
     <string name="sendButtonLabel">Send</string>
-    <string name="CommDataViewTitle">Lab517</string>
+    <string name="CommDataViewTitle">WSN-gateway</string>
     <string name="fromDataLabel">Data received:</string>
     <string name="toDataLabel">Text to Send:</string>
     <string name="socketConnect">socket is not connected!</string>
     <string name="serverIP">IP:  </string>
     <string name="serverPORT">PORT:  </string>
-    <string name="defaultIP1">192</string>
-    <string name="defaultIP2">168</string>
-    <string name="defaultIP3">123</string>
-    <string name="defaultIP4">5</string>
+    <string name="defaultIP">192.168.123.5</string>
     <string name="defaultPORT">8888</string>
     <string name="button">断开重连</string>
-    <string name="dot">.</string>
+    <string name="checkBox">数据是否可见</string>
 </resources>

@@ -9,6 +9,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -26,13 +28,13 @@ import android.os.Message;
  * @author SXL 主程序
  * 
  */
-public class MainActivity extends Activity implements OnClickListener {
+public class MainActivity extends Activity {
 
 	private static final String TAG = "MainActivity";
 	private static TextView dataView = null, socketConnect = null;
-	private EditText editIP1 = null, editIP2 = null, editIP3 = null,
-			editIP4 = null, editPORT = null;
+	private EditText editIP = null, editPORT = null;
 	private Button button = null;
+	private CheckBox checkBox = null;
 
 	private DataSendThread dataSendThread = null;
 	private DataRevThread dataRevThread = null;
@@ -44,30 +46,47 @@ public class MainActivity extends Activity implements OnClickListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		setMAC(new String("00:00:FF:FF:00:01"));
-
+		
+		HardwareControler.setLedState(2, 1);
+		if (Variable.sysBoot) {
+			setEthernet(Variable.MAC, 5555);
+		}
+		
 		iniWidgets();
 		iniThreads();
-		HardwareControler.setLedState(2, 1);
 	}
 
 	private void iniWidgets() {
 		socketConnect = (TextView) findViewById(R.id.textview1);
 		dataView = (TextView) findViewById(R.id.textview2);
-		editIP1 = (EditText) findViewById(R.id.editip1);
-		editIP2 = (EditText) findViewById(R.id.editip2);
-		editIP3 = (EditText) findViewById(R.id.editip3);
-		editIP4 = (EditText) findViewById(R.id.editip4);
+		editIP = (EditText) findViewById(R.id.editip);
 		editPORT = (EditText) findViewById(R.id.editport);
+		
 		button = (Button) findViewById(R.id.button1);
-		button.setOnClickListener(this);
+		button.setOnClickListener(new View.OnClickListener() {
+		    public void onClick(View v) {
+		    	BtnSocket(editIP.isEnabled());
+		    }
+		});
+		
+		checkBox = (CheckBox)this.findViewById(R.id.checkBox1);
+		checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){ 
+            @Override 
+            public void onCheckedChanged(CompoundButton buttonView, 
+                    boolean isChecked) { 
+                // TODO Auto-generated method stub 
+                if(isChecked){
+                	Variable.isVisible = true;
+                }else{
+                	Variable.isVisible = false;
+                	dataView.setText("");
+                } 
+            } 
+        }); 
 	}
 
 	private void iniThreads() {
-		Variable.host = this.getString(R.string.defaultIP1) + "."
-				+ this.getString(R.string.defaultIP2) + "."
-				+ this.getString(R.string.defaultIP3) + "."
-				+ this.getString(R.string.defaultIP4);
+		Variable.host = this.getString(R.string.defaultIP);
 		Variable.port = Integer.parseInt(this.getString(R.string.defaultPORT));
 
 		dataSendThread = new DataSendThread();
@@ -82,17 +101,20 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 
 	/**
-	 * @param mac 设置mac地址
+	 * @param mac 设置mac地址,打开网络调试
 	 */
-	public static void setMAC(String mac) {
+	private static void setEthernet(String mac, int port) {
 		Process process = null;
 		DataOutputStream os = null;
 		try {
 			process = Runtime.getRuntime().exec("su");
 			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes("/system/busybox/sbin/ifconfig eth0 down\n");
-			os.writeBytes("/system/busybox/sbin/ifconfig eth0 hw ether " + mac + "\n");
-			os.writeBytes("/system/busybox/sbin/ifconfig eth0 up\n");
+			os.writeBytes("ifconfig eth0 down\n");
+			os.writeBytes("ifconfig eth0 hw ether " + mac + "\n");
+			os.writeBytes("ifconfig eth0 up\n");
+			os.writeBytes("stop adbd\n");
+			os.writeBytes("setprop service.adb.tcp.port " + port + "\n");
+			os.writeBytes("start adbd\n");
 			os.writeBytes("exit\n");
 			os.flush();
 			process.waitFor();
@@ -115,45 +137,31 @@ public class MainActivity extends Activity implements OnClickListener {
 		}
 	}
 	
-	@Override
-	public void onClick(View v) {
-		if (v.getId() == R.id.button1) {
-			// TODO Auto-generated method stub
-			if (editIP1.isEnabled()) {
-				Variable.host = editIP1.getText().toString() + "."
-						+ editIP2.getText().toString() + "."
-						+ editIP3.getText().toString() + "."
-						+ editIP4.getText().toString();
-
-				String strPort = editPORT.getText().toString();
-				if ("".equals(strPort)) {
-					strPort = "0";
-				}
-				Variable.port = Integer.parseInt(strPort);
-
-				editIP1.setEnabled(false);
-				editIP2.setEnabled(false);
-				editIP3.setEnabled(false);
-				editIP4.setEnabled(false);
-				editPORT.setEnabled(false);
-				button.setText("断开重连");
-
-				Variable.editEnable = false;
-
-			} else {
-				editIP1.setEnabled(true);
-				editIP2.setEnabled(true);
-				editIP3.setEnabled(true);
-				editIP4.setEnabled(true);
-				editPORT.setEnabled(true);
-				button.setText("连接");
-				if (Variable.isSocketConnected) {
-					socketConnect.setText("ip connect,   socket disconnect");
-					socketConnect.setTextColor(android.graphics.Color.YELLOW);
-				}
-				// 重启数据发送线程，重新连接服务器
-				Variable.editEnable = true;
+	private void BtnSocket(boolean socketConn) {
+		if (socketConn) {
+			Variable.host = editIP.getText().toString();
+			String strPort = editPORT.getText().toString();
+			if ("".equals(strPort)) {
+				strPort = "0";
 			}
+			Variable.port = Integer.parseInt(strPort);
+
+			editIP.setEnabled(false);
+			editPORT.setEnabled(false);
+			button.setText("断开重连");
+
+			Variable.editEnable = false;
+
+		} else {
+			editIP.setEnabled(true);
+			editPORT.setEnabled(true);
+			button.setText("连接");
+			if (Variable.isSocketConnected) {
+				socketConnect.setText("ip connect,   socket disconnect");
+				socketConnect.setTextColor(android.graphics.Color.YELLOW);
+			}
+			// 重启数据发送线程，重新连接服务器
+			Variable.editEnable = true;
 		}
 	}
 
@@ -174,14 +182,16 @@ public class MainActivity extends Activity implements OnClickListener {
 				socketConnect.setTextColor(android.graphics.Color.BLUE);
 				break;
 			case Variable.PING_CONNECT:
-				socketConnect.setText("ip connect,   socket disconnect");
+				socketConnect.setText("ip connect---socket disconnect");
 				socketConnect.setTextColor(android.graphics.Color.YELLOW);
 				break;
-			case Variable.REFLESH_TEXT:
-				if (dataView.getLineCount() >= MAXLINES) {
-					dataView.setText(msg.getData().getString("str"));
-				} else {
-					dataView.append(msg.getData().getString("str"));
+			case Variable.TEXT_REFLESH:
+				if (Variable.isVisible) {
+					if (dataView.getLineCount() >= MAXLINES) {
+						dataView.setText(msg.getData().getString("str"));
+					} else {
+						dataView.append(msg.getData().getString("str"));
+					}
 				}
 				break;
 			}

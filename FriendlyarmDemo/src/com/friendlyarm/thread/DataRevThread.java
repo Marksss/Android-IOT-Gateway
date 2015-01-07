@@ -57,14 +57,16 @@ public class DataRevThread extends Thread {
 						if (retSize > 0) {
 							str = new String(buf, 0, retSize);
 
-							// 发送str和message.what到主线程
-							message = Message.obtain();
-							Bundle bundle = new Bundle();
-							bundle.putString("str", str);
-							message.setData(bundle);
-							message.what = Variable.REFLESH_TEXT;
-							MainActivity.handler.sendMessage(message);
-
+							if (Variable.isVisible) {
+								// 发送str和message.what到主线程
+								message = Message.obtain();
+								Bundle bundle = new Bundle();
+								bundle.putString("str", str);
+								message.setData(bundle);
+								message.what = Variable.TEXT_REFLESH;
+								MainActivity.handler.sendMessage(message);
+							}
+							
 							if (!Variable.editEnable) {
 								// 若button已按下，则解析数据并传递到相应的线程中
 								frameData.append(str);
