@@ -2,7 +2,7 @@ package com.friendlyarm.thread;
 
 import java.io.IOException;
 import com.friendlyarm.AndroidSDK.HardwareControler;
-import com.friendlyarm.demo.MainActivity;
+import com.friendlyarm.demo.GWMain;
 import com.friendlyarm.demo.Variable;
 
 import android.os.Message;
@@ -49,13 +49,13 @@ public class NetStatusThread extends Thread {
 	 * @param sc
 	 */
 	private void setNetStatus(boolean sc) {
-		if (Variable.isSocketConnected != sc) {
-			Variable.isSocketConnected = sc;
+		if (Variable.socketConnected != sc) {
+			Variable.socketConnected = sc;
 			
 			if (sc) {
 				Message message = new Message();
 				message.what = Variable.PING_CONNECT;
-				MainActivity.handler.sendMessage(message);
+				GWMain.handler.sendMessage(message);
 				
 				HardwareControler.setLedState(0,1);
 				Log.i(TAG, Variable.host + ":ping success");

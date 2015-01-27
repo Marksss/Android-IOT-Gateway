@@ -7,7 +7,6 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -28,7 +27,7 @@ import android.os.Message;
  * @author SXL 主程序
  * 
  */
-public class MainActivity extends Activity {
+public class GWMain extends Activity {
 
 	private static final String TAG = "MainActivity";
 	private static TextView dataView = null, socketConnect = null;
@@ -49,7 +48,7 @@ public class MainActivity extends Activity {
 		
 		HardwareControler.setLedState(2, 1);
 		if (Variable.sysBoot) {
-			setEthernet(Variable.MAC, 5555);
+			setEthernet();
 		}
 		
 		iniWidgets();
@@ -100,20 +99,20 @@ public class MainActivity extends Activity {
 		connStatusThread.start();// 开启网络监控线程
 	}
 
-	/**
-	 * @param mac 设置mac地址,打开网络调试
-	 */
-	private static void setEthernet(String mac, int port) {
+	private static final String MAC = "00:00:FF:FF:00:01";
+	private static final int PORT = 5555;
+
+	private static void setEthernet() {
 		Process process = null;
 		DataOutputStream os = null;
 		try {
 			process = Runtime.getRuntime().exec("su");
 			os = new DataOutputStream(process.getOutputStream());
 			os.writeBytes("ifconfig eth0 down\n");
-			os.writeBytes("ifconfig eth0 hw ether " + mac + "\n");
+			os.writeBytes("ifconfig eth0 hw ether " + MAC + "\n");
 			os.writeBytes("ifconfig eth0 up\n");
 			os.writeBytes("stop adbd\n");
-			os.writeBytes("setprop service.adb.tcp.port " + port + "\n");
+			os.writeBytes("setprop service.adb.tcp.port " + PORT + "\n");
 			os.writeBytes("start adbd\n");
 			os.writeBytes("exit\n");
 			os.flush();
@@ -148,16 +147,16 @@ public class MainActivity extends Activity {
 
 			editIP.setEnabled(false);
 			editPORT.setEnabled(false);
-			button.setText("断开重连");
+			button.setText(this.getString(R.string.button_close));
 
 			Variable.editEnable = false;
 
 		} else {
 			editIP.setEnabled(true);
 			editPORT.setEnabled(true);
-			button.setText("连接");
-			if (Variable.isSocketConnected) {
-				socketConnect.setText("ip connect,   socket disconnect");
+			button.setText(this.getString(R.string.button_open));
+			if (Variable.socketConnected) {
+				socketConnect.setText("ip connect---socket disconnect");
 				socketConnect.setTextColor(android.graphics.Color.YELLOW);
 			}
 			// 重启数据发送线程，重新连接服务器

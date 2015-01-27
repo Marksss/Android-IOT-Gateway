@@ -12,6 +12,7 @@
     <string name="serverPORT">PORT:  </string>
     <string name="defaultIP">192.168.123.5</string>
     <string name="defaultPORT">8888</string>
-    <string name="button">断开重连</string>
+    <string name="button_close">断开重连</string>
+    <string name="button_open">重新连接</string>
     <string name="checkBox">数据是否可见</string>
 </resources>

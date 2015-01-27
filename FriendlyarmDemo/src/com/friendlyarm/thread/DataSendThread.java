@@ -12,7 +12,7 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import com.friendlyarm.demo.MainActivity;
+import com.friendlyarm.demo.GWMain;
 import com.friendlyarm.demo.Variable;
 
 import android.os.Message;
@@ -42,7 +42,7 @@ public class DataSendThread extends Thread {
 
 		while (true) {
 			try {
-				if (Variable.editEnable || !Variable.isSocketConnected) {
+				if (Variable.editEnable || !Variable.socketConnected) {
 					// 如果button未按下，正在更改ip和port，则循环运行sleep(500)
 					Thread.sleep(500);
 					continue;
@@ -50,7 +50,7 @@ public class DataSendThread extends Thread {
 
 				message = Message.obtain();
 				message.what = Variable.SOCKET_CONNECTING;
-				MainActivity.handler.sendMessage(message);
+				GWMain.handler.sendMessage(message);
 				Log.i(TAG, "Ready to connect");
 
 				// 连接服务器
@@ -60,7 +60,7 @@ public class DataSendThread extends Thread {
 
 				message = Message.obtain();
 				message.what = Variable.SOCKET_CONNECT;
-				MainActivity.handler.sendMessage(message);
+				GWMain.handler.sendMessage(message);
 
 				// 更改系统时间
 				input = client.getInputStream();
@@ -77,7 +77,7 @@ public class DataSendThread extends Thread {
 				int i = 0;
 
 				while (true) {
-					if (Variable.editEnable || !Variable.isSocketConnected) {
+					if (Variable.editEnable || !Variable.socketConnected) {
 						// “button未按下”和“socket突然断开” 二者中满足其中一个就重新循环
 						client.close();
 						print.close();
@@ -94,7 +94,7 @@ public class DataSendThread extends Thread {
 
 					// 接收关闭socket标识
 					if((i++) >= 20){
-						Variable.isSocketConnected = !isServerSocetClosed(input);
+						Variable.socketConnected = !isServerSocetClosed(input);
 						i = 0;
 					}
 					

@@ -4,7 +4,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.friendlyarm.AndroidSDK.HardwareControler;
-import com.friendlyarm.demo.MainActivity;
+import com.friendlyarm.demo.GWMain;
 import com.friendlyarm.demo.Variable;
 
 import android.os.Bundle;
@@ -64,7 +64,7 @@ public class DataRevThread extends Thread {
 								bundle.putString("str", str);
 								message.setData(bundle);
 								message.what = Variable.TEXT_REFLESH;
-								MainActivity.handler.sendMessage(message);
+								GWMain.handler.sendMessage(message);
 							}
 							
 							if (!Variable.editEnable) {
@@ -112,7 +112,7 @@ public class DataRevThread extends Thread {
 						break;
 					} else {
 						// 帧完整，则发送到DataSendThread或DataStoreThread
-						if (Variable.isSocketConnected) {
+						if (Variable.socketConnected) {
 							dataSendThread.offerQueue(tempData.substring(0,
 									9 + dataLength) + df.format(new Date()));
 						} else {

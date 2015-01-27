@@ -40,8 +40,9 @@ public final class R {
         public static final int SerialPortSettingsTitle=0x7f050001;
         public static final int app_name=0x7f050000;
         public static final int backButtonText=0x7f050002;
-        public static final int button=0x7f05000c;
-        public static final int checkBox=0x7f05000d;
+        public static final int button_close=0x7f05000c;
+        public static final int button_open=0x7f05000d;
+        public static final int checkBox=0x7f05000e;
         public static final int defaultIP=0x7f05000a;
         public static final int defaultPORT=0x7f05000b;
         public static final int fromDataLabel=0x7f050005;
