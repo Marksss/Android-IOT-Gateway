@@ -3,10 +3,10 @@ package com.friendlyarm.thread;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import com.friendlyarm.AndroidSDK.HardwareControler;
+import com.friendlyarm.AndroidSDK.FetchDevice;
+import com.friendlyarm.AndroidSDK.SerialPort;
 import com.friendlyarm.demo.GWMain;
 import com.friendlyarm.demo.Variable;
-
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
@@ -29,49 +29,39 @@ public class DataRevThread extends Thread {
 		df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); // 日期格式
 	}
 
-	private final String devName = "/dev/s3c2410_serial3";
-	private final int speed = 9600, dataBits = 8, stopBits = 1;
-	private final int BUFSIZE = 512;
-
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		byte[] buf = new byte[BUFSIZE];
-		int retSize = 0, devfd = -1;
+		FetchDevice device;
 		String str = null; // 用于接收串口数据
 		StringBuilder frameData = new StringBuilder(100 * 20); // 用于数据解析发送
 		Message message = new Message();
+		
+		device = new SerialPort();
+		Log.i(TAG, "Start to Fetch the data");
 
 		try {
 			while (true) {
-				// 如果devfd = -1就说明串口连接失败
-				devfd = HardwareControler.openSerialPort(devName, speed,
-						dataBits, stopBits);
-				Log.i(TAG, "SerialPort opened");
-
-				while (devfd != -1) {
+				boolean deviceOpen = device.open();
+				while (deviceOpen) {
 					Thread.sleep(200);
-
-					if (HardwareControler.select(devfd, 0, 0) == 1) {
-						retSize = HardwareControler.read(devfd, buf, BUFSIZE);
-						if (retSize > 0) {
-							str = new String(buf, 0, retSize);
-
-							if (Variable.isVisible) {
-								// 发送str和message.what到主线程
-								message = Message.obtain();
-								Bundle bundle = new Bundle();
-								bundle.putString("str", str);
-								message.setData(bundle);
-								message.what = Variable.TEXT_REFLESH;
-								GWMain.handler.sendMessage(message);
-							}
-							
-							if (!Variable.editEnable) {
-								// 若button已按下，则解析数据并传递到相应的线程中
-								frameData.append(str);
-								frameData = analyzeData(frameData);
-							}
+					
+					if (device.isDataReady()) {
+						str = device.readData();
+						if (Variable.isVisible) {
+							// 发送str和message.what到主线程
+							message = Message.obtain();
+							Bundle bundle = new Bundle();
+							bundle.putString("str", str);
+							message.setData(bundle);
+							message.what = Variable.TEXT_REFLESH;
+							GWMain.handler.sendMessage(message);
+						}
+						
+						if (!Variable.editEnable) {
+							// 若button已按下，则解析数据并传递到相应的线程中
+							frameData.append(str);
+							frameData = analyzeData(frameData);
 						}
 					}
 				}
@@ -84,10 +74,7 @@ public class DataRevThread extends Thread {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
 			// 线程interrupt后关闭串口连接，自行退出
-			if (devfd != -1) {
-				HardwareControler.close(devfd);
-			}
-			Log.i(TAG, "SerialPort closed!!!");
+			device.close();
 		}
 	}
 
